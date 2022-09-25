@@ -24,12 +24,10 @@ def rescaleImage(img, scale):
     showImageInfo(resized)
     showImage(resized)
 
-
 def main():
 
     obj_img = cv2.imread("imgs/Rengoku.jpg")
     rescaleImage(obj_img, 50)
-
 
 if __name__ == "__main__":
     main()
