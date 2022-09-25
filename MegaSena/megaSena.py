@@ -1,11 +1,15 @@
 import random
 
+def imprimeVetor(vetor):
+    for i in range(len(vetor)):
+        print(vetor[i])
+
 def aleatorio():
     vet = []
-    a = []
-    for i in range(0, 6):
+    for i in range(6):
         a = random.randint(1, 60)
-        print(a)
+        if a not in vet: vet.append(a)
+    imprimeVetor(vet)
 
 def main():
     aleatorio()
