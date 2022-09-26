@@ -24,26 +24,11 @@ def drawTriangle(img, p1, p2, p3):
     cv2.fillPoly(img, pts=[points], color=(0, 0, 0))
     return img
 
-def getColor(img, x, y):
-    return img.item(y, x, 0), img.item(y, x, 1), img.item(y, x, 2)
-
-def setColor(img, x, y, b, g, r):
-    img.itemset((y, x, 0), b)
-    img.itemset((y, x, 1), g)
-    img.itemset((y, x, 2), r)
-    return img
-
 def main():
     imgOpenCv = cv2.imread("imgs/Babuino.jpg")
     altura, largura, canalCor = imgOpenCv.shape
 
-    for y in range(0, altura):
-        for x in range(0, largura):
-            azul, verde, vermelho = getColor(imgOpenCv, x, y)
-            imgOpenCv = setColor(imgOpenCv, x, y, azul, verde, vermelho)
-
     #Desenhe três linhas que passam pelos pontos dados usando a função de linha embutida do OpenCV. Ele irá criar um triângulo na janela preta.
-    #Encontre o baricentro do triângulo usando a fórmula do centróide.
     p1 = (607, 238)
     p2 = (776, 238)
     p3 = (690, 96)
