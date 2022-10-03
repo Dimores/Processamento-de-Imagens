@@ -23,11 +23,11 @@ def tiraMedia(largura, altura, c1, c2, c3):
     print("Média de verde por pixel    = ", b)
     print("Média de vermelho por pixel = ", c)
 
-    if(a > (b and c)):
+    if((a > b) and (a > c)):
         print("\nA imagem é mais AZUL!")
-    if(b > (a and c)):
+    if((b > a) and (b > c)):
         print("\nA imagem é mais VERDE!")
-    if(c > (a and b)):
+    if((c > a and (c > b)):
         print("\nA imagem é mais VERMELHA")
 
 def main():

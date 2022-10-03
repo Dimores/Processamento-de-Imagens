@@ -16,6 +16,7 @@ def geraImagem(width, height):
 def main():
     filename = "imagem3.png"
     obj_img = geraImagem(600, 300)
+    obj_img = cv2.cvtColor(obj_img, cv2.COLOR_BGR2RGB)
     cv2.imwrite(filename, obj_img)
 
 if __name__ == "__main__":
