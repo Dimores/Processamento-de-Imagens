@@ -47,7 +47,7 @@ def main():
 		if((frame_count > 80) and (frame_count <= 100)):
 		   img_resize = cv2.convertScaleAbs(img_resize, alpha = current_contrast / 100, beta = g)
 		   video.write(img_resize)
-		   g -= 2
+		   t -= 13
 		   
 if __name__ == "__main__":
 	main()
