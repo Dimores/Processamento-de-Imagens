@@ -22,5 +22,28 @@ def main():
     concat = cv2.hconcat((imgBgr,saida))   #Concatenando a imagem com a imagem equalizada
     cv2.imwrite("equalizeHist.jpg",concat)
 
+    color = ('b', 'g', 'r')
+
+    #"col" vai receber b, depois g, depois r
+    #"enumerate()" é util na passagem de parâmetros para construir cada histograma
+    for i, col in enumerate(color): #For que vai iterar para cada canal
+        histograma = cv2.calcHist([imgBgr], [i], None, [256], [0,256]) #Função que gera os 3 histogramas separados("None" = máscara)
+        plt.plot(histograma, color = col)    #Função que constroi o histograma definido, para o canal de cor específico
+        plt.xlim([0,256])    #Definindo os limites em relação a X desse histograma
+
+    plt.show()
+
+    #"col" vai receber b, depois g, depois r
+    #"enumerate()" é util na passagem de parâmetros para construir cada histograma
+    for i, col in enumerate(color): #For que vai iterar para cada canal
+        histograma2 = cv2.calcHist([concat], [i], None, [256], [0,256]) #Função que gera os 3 histogramas separados("None" = máscara)
+        plt.plot(histograma2, color = col)    #Função que constroi o histograma definido, para o canal de cor específico
+        plt.xlim([0,256])    #Definindo os limites em relação a X desse histograma
+
+    plt.show()
+
+    cv2.waitKey(0) #Tecla Q
+    cv2.destroyAllWindows()
+
 if __name__ == "__main__":
     main()
