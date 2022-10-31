@@ -1,5 +1,6 @@
 #Histograma PRETO E BRANCO
 #by Diego Morelo
+#https://theailearner.com/tag/cv2-comparehist/
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
@@ -22,7 +23,11 @@ def comparaHistograma(S1,S2,D1,D2,D3):
     histD1 = cv2.calcHist([D1], [0], None, [256], [0, 256])
     histD2 = cv2.calcHist([D2], [0], None, [256], [0, 256])
     histD3 = cv2.calcHist([D3], [0], None, [256], [0, 256])
-        
+    
+    #Normalizando os histogramas
+    cv2.normalize(histS1, histS1, alpha = 0, beta = 1, norm_type = cv2.NORM_MINMAX)
+    cv2.normalize(histS2, histS2, alpha = 0, beta = 1, norm_type = cv2.NORM_MINMAX)
+    
     #---------------------------------------S1 COM S2--------------------------------------
     print("----------------------------------------------")
     print("S1 com S2\n")
@@ -70,7 +75,7 @@ def comparaHistograma(S1,S2,D1,D2,D3):
 
 def main():
 
-    #Carregando as imagens em tons de cinza
+    #Carregando as imagens
     S1 = cv2.imread('imgs/S1.jpg', 0)
     S2 = cv2.imread('imgs/S2.jpg', 0)
     D1 = cv2.imread('imgs/D1.jpg', 0)
