@@ -76,11 +76,19 @@ def comparaHistograma(S1,S2,D1,D2,D3):
 def main():
 
     #Carregando as imagens
-    S1 = cv2.imread('imgs/S1.jpg', 0)
-    S2 = cv2.imread('imgs/S2.jpg', 0)
-    D1 = cv2.imread('imgs/D1.jpg', 0)
-    D2 = cv2.imread('imgs/D2.jpg', 0)
-    D3 = cv2.imread('imgs/D3.jpg', 0)
+    S1 = cv2.imread('imgs/S1.jpg')
+    S2 = cv2.imread('imgs/S2.jpg')
+    D1 = cv2.imread('imgs/D1.jpg')
+    D2 = cv2.imread('imgs/D2.jpg')
+    D3 = cv2.imread('imgs/D3.jpg')
+    
+    #Convertendo em HSV
+    S1HSV = 
+    S2HSV = 
+    D1HSV = 
+    D2HSV = 
+    D3SHV = 
+    
 
     comparaHistograma(S1,S2,D1,D2,D3)
     #Mostrando o histograma e a imagem na tela
