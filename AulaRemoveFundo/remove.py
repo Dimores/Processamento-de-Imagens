@@ -1,63 +1,7 @@
-from tkinter import *
-from PIL import Image
-from PIL import ImageTk
-from tkinter import filedialog
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 import glob
-
-'''
-    Observações>
-    1->Implementar interface gráfica antes do Grab Cut
-
-
-'''
-
-#Faz a sobreposição de duas imagens
-def addImageOverlay(background, foreground, translationForegroundW, translationForegroundH):
-
-    #Pegando a altura e a largura da imagem da frente e da de trás
-    backH, backW, _ = background.shape
-    foreH, foreW, _ = foreground.shape
-
-    #Subtraindo altura e largura da imagem, e pegando "oque sobra"
-    remainingH, remainingW = backH - foreH, backW - foreW
-
-    #Se a posição y da imagem normal + a altura dela forem maiores do que a altura da imagem de fundo
-    if translationForegroundH + foreH > backH:
-        print("Erro: Sobreposição com altura maior do que a permitida.")
-        print("Posição final que altura do objeto da frente termina:", translationForegroundH + foreH)
-        print("Altura do fundo:", backH)
-        return
-
-    #Se a posição x da imagem normal + a largura dela forem maiores do que a largura da imagem de fundo
-    if translationForegroundW + foreW > backW:
-        print("Erro: sobreposição com largura maior do que a permitida.")
-        print("Posição final que largura do objeto da frente termina:", translationForegroundW + foreW)
-        print("Largura do fundo:", backW)
-        return
-
-    #Parte do cenário do fundo em que a imagem será adicionada
-    crop = background[translationForegroundH : foreH + translationForegroundH, translationForegroundW : foreW + translationForegroundW]
-
-    #Transformamos o foreground em imagem com tons de cinza e criamos uma máscara binária da mesma com a binarização (cv2.threshold)
-    foregroundGray = cv2.cvtColor(foreground, cv2.COLOR_BGR2GRAY) #Separa os pixels que compoem a imagem do fundo
-    ret, maskFore = cv2.threshold(foregroundGray, 210, 255, cv2.THRESH_BINARY)  #Linearização
-
-    #Agora aplicamos uma operação de AND binário na imagem recortada 'crop'. No caso, realizar a operação binária entre a mesma imagem não terá efeito. Só que, com a inclusão da máscara no terceiro parâmetro, os pixels pretos de maskFore serão ignorados e, portanto, ficarão escuros. Com isso temos a marcação em que vamos incluir o foreground posteriormente.
-    backWithMask = cv2.bitwise_and(crop, crop, mask = maskFore)
-    foreWithMask = cv2.bitwise_not(maskFore)
-    foreWithMask = cv2.bitwise_and(foreground, foreground, mask = foreWithMask)
-
-    #Faremos a composição entre 'frente' e 'fundo', compondo o foreground na imagem extraída do background.
-    combinedImage = cv2.add(foreWithMask, backWithMask)
-
-    #Adicionamos a imagem gerada no background final.
-    copyImage = background.copy()
-    copyImage[translationForegroundH:foreH + translationForegroundH, translationForegroundW:foreW + translationForegroundW] = combinedImage
-
-    return copyImage
 
 def showSingleImage(img, title, size):
     fig, axis = plt.subplots(figsize = size)
@@ -114,130 +58,56 @@ def carregaImagemCinza(img):
     img = cv2.imread(img, 0)
     return img
 
-class GrabCutGUI(Frame): #Frame é a classe pai
-    def __init__(self, master = None):
-        #Invoca o construtor da classe pai Frame
-        Frame.__init__(self, master)  #Self refere-se a instancia do objeto
-
-        #Inicializar a interface gráfica
-        self.iniciaUI()
-
-    def iniciaUI(self):
-        #preparando a janela
-        self.master.title("Janela da Imagem Segmentada")
-        self.pack()  #Pega os componentes que a sua janela tem até o momento, e organiza
-
-        #computa ações de mouse
-        self.computaAcoesDoMouse()
-
-        #carregando a imagem do disco
-        self.imagem = self.carregaImagemASerExibida()
-
-        #criar um canvas que receberá a imagem
-        self.canvas = Canvas(self.master, width = self.imagem.width(), height = self.imagem.height(), cursor = "cross")
-
-        #desenhar a imagem que carreguei no canvas
-        self.canvas.create_image(0, 0, anchor = NW, image = self.imagem)
-        self.canvas.image = self.imagem #pra imagem não ser removida pelo garbage collector
-
-        #posiciona todos os elementos no canvas
-        self.canvas.pack()
-
-    def computaAcoesDoMouse(self):
-        self.startX = None
-        self.startY = None
-        self.rect   = None
-
-        self.master.bind("<ButtonPress-1>", self.callbackBotaoPressionado)
-        self.master.bind("<B1-Motion>", self.callbackBotaoPressionadoEmMovimento)
-        self.master.bind("<ButtonRelease-1>", self.callbackBotaoSolto)
-
-    def callbackBotaoSolto(self, event):
-        if self.rectangleReady:
-            #criar uma nova janela
-            windowGrabcut = Toplevel(self.master)
-            windowGrabcut.wm_title("Segmentation")
-            windowGrabcut.minsize(width = self.imagem.width(), height = self.imagem.height())
-
-            #criar canvas pra essa nova janela
-            canvasGrabcut = Canvas(windowGrabcut, width = self.imagem.width(), height = self.imagem.height())
-            canvasGrabcut.pack()
-
-            #aplicar grabcut na imagem
-            mask = np.zeros(self.imagemOpenCV.shape[:2], np.uint8)
-            print(mask.shape)
-            rectGcut = (int(self.startX), int(self.startY), int(event.x - self.startX), int(event.y - self.startY))
-            fundoModel = np.zeros((1, 65), np.float64)
-            objModel = np.zeros((1, 65), np.float64)
-
-            #invocar grabcut
-            cv2.grabCut(self.imagemOpenCV, mask, rectGcut, fundoModel, objModel, 5, cv2.GC_INIT_WITH_RECT)
-            #imagemOpenCv = cv2.blur(imagemOpenCV, (15,15))
-
-            #preparando imagem final
-            maskFinal = np.where((mask == 2) | (mask == 0), 0, 1).astype('uint8')
-            imgFinal = self.imagemOpenCV * maskFinal[:,:,np.newaxis]
-            for x in range(0, self.imagemOpenCV.shape[1]):
-                for y in range(0, self.imagemOpenCV.shape[0]):
-                    if(maskFinal[y][x] == 0):
-                        imgFinal[y][x][0] = imgFinal[y][x][1] = imgFinal[y][x][2] = 0
-
-            #converter de volta do opencv pra Tkinter
-            imgFinal = cv2.cvtColor(imgFinal, cv2.COLOR_BGR2RGB)
-            imgFinal = Image.fromarray(imgFinal)
-            imgFinal = ImageTk.PhotoImage(imgFinal)
-
-            #inserir a imagem segmentada no canvas
-            canvasGrabcut.create_image(0, 0, anchor = NW, image = imgFinal)
-            canvasGrabcut.image = imgFinal
-
-    def callbackBotaoPressionadoEmMovimento(self, event):
-        #novas posicoes de x e y
-        currentX = self.canvas.canvasx(event.x)
-        currentY = self.canvas.canvasy(event.y)
-
-        #atualiza o retângulo a ser desenhado
-        self.canvas.coords(self.rect, self.startX, self.startY, currentX, currentY)
-
-        #verifica se existe retângulo desenhado
-        self.rectangleReady = True
-
-    def callbackBotaoPressionado(self, event):
-        #convertendo o x do frame, pro x do canvas e copiando isso em startX
-        self.startX = self.canvas.canvasx(event.x)
-        self.startY = self.canvas.canvasy(event.y)
-
-        if not self.rect:
-            self.rect = self.canvas.create_rectangle(0, 0, 0, 0, outline="blue")
-
-    def carregaImagemASerExibida(self):
-        caminhoDaImagem = filedialog.askopenfilename()
-
-        #se a imagem existir, entra no if
-        if(len(caminhoDaImagem) > 0):
-            self.imagemOpenCV = cv2.imread(caminhoDaImagem)
-
-            #converte de opencv para o formato PhotoImage
-            image = cv2.cvtColor(self.imagemOpenCV, cv2.COLOR_BGR2RGB)
-
-            #converte de OpenCV pra PIL
-            image = Image.fromarray(image)
-
-            #converte de PIL pra PhotoImage
-            image = ImageTk.PhotoImage(image)
-
-            return image
-
-
 def main():
-    #Inicializando a Tkinter
-    root = Tk()
+    #Criando a lista de arquivo do glov
+    folder = 'imgs/*'
+    image_files_list = glob.glob(folder)
 
-    #Cria a aplicação
-    appcut = GrabCutGUI(master = root)
+    caraBonito = image_files_list[0]
+    caraBonito = cv2.imread(caraBonito)
+    caraBonito = cv2.cvtColor(caraBonito, cv2.COLOR_BGR2RGB) #Carregando a imagem e convertendo para RGB
 
-    #Cria um loop do programa
-    appcut.mainloop()
+    #Criando uma cópia da imagem original
+    fundo = caraBonito.copy()
+
+    mask = np.zeros(caraBonito.shape[:2],np.uint8) #Criando uma mascara da imagem original, cortando tudo exceto as cores
+
+    bgdModel = np.zeros((1,65),np.float64)  #Modelo de fundo, matriz com 0's, que tem um vetor de 65 escalares, cada posicao é um float64
+    fgdModel = np.zeros((1,65),np.float64)  #Modelo de objeto, matriz com 0's, que tem um vetor de 65 escalares, cada posicao é um float64
+
+    #Altura e largura para criar o retangulo do grabcut
+    altura = int(caraBonito.shape[0])
+    largura = int(caraBonito.shape[1])
+
+    #Retangulo que marca a posicao inicial e final aonde o algoritmo será aplicado
+    rect = (0, 0, altura, largura)
+
+    cv2.grabCut(caraBonito, mask, rect, bgdModel, fgdModel, 6, cv2.GC_INIT_WITH_RECT)
+
+    #Máscara final, em cada posicao da mascara aonde é fundo e provavelmente fundo, ele substitui por 0, do contrário 1
+    mask2 = np.where((mask == 2)|(mask == 0), 0, 1).astype('uint8')
+
+    #Multiplicando a imagem pela mascara2, pegando uma matriz em que cada posicao é um vetor 1D,
+    #e convertendo cada posicao em um vetor 3D, tornando o fundo preto
+    caraBonito = caraBonito * mask2[:,:,np.newaxis]
+
+    #Criando o meu fundo
+    for x in range(0, caraBonito.shape[1]):
+        for y in range(0, caraBonito.shape[0]):
+            if(mask2[y][x] == 1): #Aonde está a mascara, subtrair o fundo - imagemOriginal
+                fundo[y][x] -= caraBonito[y][x]
+
+
+    #Criando uma copia pra borrar o fundo
+    copia = fundo.copy()
+    copia = cv2.blur(fundo, (30,30))
+
+    #Somando o fundo com a imagem original
+    imgFinal = caraBonito + copia
+
+    imgsArray = [caraBonito, mask2, fundo, copia, imgFinal] #Vetor de imagens
+    titlesArray = ['Original', 'Mascara', 'fundo', 'blur', 'final']  #Vetor de títulos
+    showMultipleImages(imgsArray, titlesArray, (20,16), 2, 3)
 
 if __name__ == "__main__":
     main()

@@ -12,9 +12,6 @@ import glob
         4->Fechamento: Uso de erosão e dilatação juntos, porém na ordem contrario da abertura
 
         5->Gradiente morfologico: Diferença entra dilatacao e erosao da imagem, encontra os contornos da imagem
-
-
-
 '''
 
 def showSingleImage(img, title, size):
@@ -129,23 +126,16 @@ def main():
     veado = carregaImagemCinza(veado)
     bolas = carregaImagemCinza(bolas)
 
-    #Fazendo um threshold no mickey
+    #Fazendo um threshold no mickey para inverter as cores
     ret, mickeyThreshold = cv2.threshold(mickey, 127, 255, cv2.THRESH_BINARY_INV)
-
-    #Aplicando a erosao na imagem
-    #imgErodida = aplicaErosao(mickeyThreshold, 8) #2 iterecoes
 
     imgAbertura = aplicaAbertura(veado, 3)
     imgAbertura2 = aplicaAbertura(bolas, 4)
-
-    #imgFechamento = aplicaFechamento(imgAbertura)
-
     gradient = aplicaGradienteMorfologico(mickeyThreshold)
 
     imgArray = [mickeyThreshold, gradient, veado, imgAbertura, bolas, imgAbertura2]
     titlesArray = ['Original', 'Gradient', 'Original', 'Abertura', 'Original', 'Abertura']
     showMultipleImages(imgArray, titlesArray, (20,16), 2, 3)
-
 
 if __name__ == "__main__":
     main()
