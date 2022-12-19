@@ -5,6 +5,8 @@ from datetime import datetime
 from Log import Logs
 from Auth import Authentication
 from Commands import CMDs
+import wget #Biblioteca pra baixar o arquivo
+import ftplib #Biblioteca FTP
 
 bind_ip = "0.0.0.0"  # Aceita conexão de qualquer origem
 bind_port = 9999  # Porta que o servidor "escuta"
@@ -31,12 +33,25 @@ def handle_client(client_socket, addr):
     # Vetor com usuário, senha e comando que será executado pelo servidor
     cmd = str(request, "utf-8").split(" ")
 
+
+
     # Verifica se a quantidade de argumentos passados pelo cliente é igual a 4
     if len(cmd) >= 3:
         # Prepara a autenticação do usuário
         auth = Authentication(cmd[0], cmd[1])
         # Verifica se a autenticação foi efetuada com sucesso
         if auth.auth():
+
+            if(cmd[2] == "get"): #Baixar o arquivo(NÃO SEI SE FUNCIONA AINDA)
+
+                path = r'C:\Users\diego\OneDrive\Documentos\Python\Trabalho Redes\tcpSocket-main\arquivos'
+                filename = cmd[3]
+                ftp = ftplib.FTP("127.0.0.1")
+                ftp.login("gustavo", "gustavo")
+                ftp.cwd(path)
+                ftp.retrbinary("RETR " + filename, open(filename, 'wb').write)
+                ftp.quit()
+
             command = CMDs(' '.join(cmd[2:])) # Envia commando para validação
             # Verifica se o comando é válido
             if command.status() == 1: # Se for verdadeiro executa o comando
@@ -45,7 +60,7 @@ def handle_client(client_socket, addr):
                 log.saveLog()
 
                 # Executa o comando no terminal do SO e retorna o resultado
-                result = subprocess.run(cmd[2:], stdout=subprocess.PIPE)
+                result = subprocess.run(cmd[2:], stdout = subprocess.PIPE)
                 client_socket.send(result.stdout)  # Envia conjunto de bytes (mensagens) para o socket remoto
             else: # Se for falso não executa o comando
                 log = Logs(data + ':' + hora + ':' + addr[0] + ':' + cmd[0] + ':' + ' '.join(cmd[2:]) + ':' +

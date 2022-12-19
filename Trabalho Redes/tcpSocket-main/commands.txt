@@ -2,3 +2,4 @@ gnome-calculator
 ls
 ls -lah
 pstree
+get
